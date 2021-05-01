@@ -49,7 +49,7 @@ def check_exchange(config: Dict[str, Any], check_for_bad: bool = True) -> bool:
             f'{", ".join(available_exchanges())}'
         )
 
-    if exchange == "Yahoo":
+    if exchange == "yahoo":
         return True
     
     if not is_exchange_known_ccxt(exchange):

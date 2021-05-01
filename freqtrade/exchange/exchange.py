@@ -6,6 +6,7 @@ import asyncio
 import http
 import inspect
 import logging
+import yahoofinance as yf
 from copy import deepcopy
 from datetime import datetime, timezone
 from math import ceil
@@ -170,8 +171,13 @@ class Exchange:
         # Find matching class for the given exchange name
         name = exchange_config['name']
 
+        exchange_type = "crypto"
+
         if not is_exchange_known_ccxt(name, ccxt_module):
-            raise OperationalException(f'Exchange {name} is not supported by ccxt')
+            if not is_exchange_known(name):
+                raise OperationalException(f'Exchange {name} is not supported by ccxt')
+            else:
+                exchange_type = "stocks"    
 
         ex_config = {
             'apiKey': exchange_config.get('key'),
@@ -184,7 +190,10 @@ class Exchange:
             ex_config.update(ccxt_kwargs)
         try:
 
-            api = getattr(ccxt_module, name.lower())(ex_config)
+            if exchange_type == "crypto" :
+                api = getattr(ccxt_module, name.lower())(ex_config)
+            else:
+                api = yf
         except (KeyError, AttributeError) as e:
             raise OperationalException(f'Exchange {name} is not supported') from e
         except ccxt.BaseError as e:
@@ -1320,6 +1329,8 @@ class Exchange:
 def is_exchange_known_ccxt(exchange_name: str, ccxt_module: CcxtModuleType = None) -> bool:
     return exchange_name in ccxt_exchanges(ccxt_module)
 
+def is_exchange_known(exchange_name: str) -> bool:
+    return exchange_name in ['yahoo']
 
 def is_exchange_officially_supported(exchange_name: str) -> bool:
     return exchange_name in ['bittrex', 'binance', 'kraken']
